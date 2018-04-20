@@ -10,7 +10,9 @@ class App extends Component {
           <h1> Hello World </h1>
         </div>
         <footer>
-          by Maria Camila Gomez
+          by Maria Camila Gómez
+          <br/>
+          ScaleConf 2018
         </footer>
       </div>
     );

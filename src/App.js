@@ -7,7 +7,7 @@ class App extends Component {
       <div className="App">
         <div class="content">
           <p> 2018 </p>
-          <h1> Hello World </h1>
+          <h1> Hello ScaleConf </h1>
         </div>
         <footer>
           by Maria Camila Gómez

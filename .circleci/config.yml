@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  build-job:
     working_directory: ~/talk_sc2018
     docker:
       - image: circleci/node:8.9.0
@@ -27,5 +27,58 @@ jobs:
       - persist_to_workspace:
           root: /home/circleci/talk_sc2018
           paths: build
+  
+  # Deploy Develop
+  deploy-develop-job:
+    docker:
+      - image: circleci/python:3.6-jessie
+    working_directory: ~/talk_sc2018
+    steps:
+      - attach_workspace:
+          at: /home/circleci/talk_sc2018
+      - run:
+          name: Install awscli
+          command: pip install awscli --upgrade --user
+      - run:
+          name: Deploy to S3 if tests pass and branch is Develop
+          command: ~/.local/bin/aws s3 sync build/ s3://camigomez-sc2018/$ENV_DEV/ --delete
+      - run:
+          name: Create invalidation on cloudfront
+          command: ~/.local/bin/aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID_DEV --paths "/*"
+  # Deploy Master
+  deploy-master-job:
+    docker:
+      - image: circleci/python:3.6-jessie
+    working_directory: ~/talk_sc2018
+    steps:
+      - attach_workspace:
+          at: /home/circleci/talk_sc2018
+      - run:
+          name: Install awscli
+          command: pip install awscli --upgrade --user
+      - run:
+          name: Deploy to S3 if tests pass and branch is Master
+          command: ~/.local/bin/aws s3 sync build/ s3://camigomez-sc2018/$ENV_PRO/ --delete
+      - run:
+          name: Create invalidation on cloudfront
+          command: ~/.local/bin/aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID_PRO --paths "/*"
 
-
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+      - build-job
+      # Deploy on Develop
+      - deploy-develop-job:
+          requires:
+            - build-job
+          filters:
+            branches:
+              only: develop
+      # Deploy on Master
+      - deploy-master-job:
+          requires:
+            - build-job
+          filters:
+            branches:
+              only: master

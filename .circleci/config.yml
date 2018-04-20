@@ -1,0 +1,31 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/talk_sc2018
+    docker:
+      - image: circleci/node:8.9.0
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: Install dependencies
+          command: yarn install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: Run test
+          command: yarn test
+      - run:
+          name: Build proyect
+          command: yarn build
+      - run:
+          name: Delete maps
+          command: yarn postbuild
+      - persist_to_workspace:
+          root: /home/circleci/talk_sc2018
+          paths: build
+
+
